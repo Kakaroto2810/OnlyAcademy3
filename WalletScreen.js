@@ -19,7 +19,7 @@ const Plan = ({ title, description, onSelect, expanded, onToggle }) => {
 
   const descriptionHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 100], // Ajuste a altura conforme necessário
+    outputRange: [0, 100], 
   });
 
   return (
@@ -46,21 +46,21 @@ const WalletScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Escolha seu plano:</Text>
       <Plan
-        title="Free"
+        title="Gratis:"
         description="Grátis por 15 dias"
         onSelect={() => alert('Plano Free selecionado')}
         expanded={expandedPlan === 'Free'}
         onToggle={() => handleToggle('Free')}
       />
       <Plan
-        title="Premium Mensal"
+        title="Premium Mensal:"
         description="R$ 100 por mês. Benefícios: Acesso ilimitado, Suporte prioritário."
         onSelect={() => navigation.navigate('Payment', { plan: 'Premium Mensal', price: 10000 })}
         expanded={expandedPlan === 'Premium Mensal'}
         onToggle={() => handleToggle('Premium Mensal')}
       />
       <Plan
-        title="Premium Anual"
+        title="Premium Anua:"
         description="R$ 50 por ano. Benefícios: Acesso ilimitado, Suporte prioritário, Descontos exclusivos."
         onSelect={() => navigation.navigate('Payment', { plan: 'Premium Anual', price: 5000 })}
         expanded={expandedPlan === 'Premium Anual'}

@@ -12,7 +12,7 @@ export default function PaymentScreen({ route }) {
   const { plan, price } = route.params; // Recebe o plano e o preço dos parâmetros de navegação
 
   const fetchPaymentSheetParams = async () => {
-    const response = await fetch('http://192.168.100.55:3000/payment-sheet', {
+    const response = await fetch('http://10.47.2.251:3000/payment-sheet', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -36,13 +36,13 @@ export default function PaymentScreen({ route }) {
     } = await fetchPaymentSheetParams();
 
     const { error } = await initPaymentSheet({
-      merchantDisplayName: "Example, Inc.",
+      merchantDisplayName: "Commodus, Inc.",
       customerId: customer,
       customerEphemeralKeySecret: ephemeralKey,
       paymentIntentClientSecret: paymentIntent,
       allowsDelayedPaymentMethods: true,
       defaultBillingDetails: {
-        name: 'Jane Doe',
+        name: 'Lucas Henrique',
       }
     });
     if (!error) {
@@ -56,7 +56,7 @@ export default function PaymentScreen({ route }) {
     if (error) {
       Alert.alert(`Error code: ${error.code}`, error.message);
     } else {
-      Alert.alert('Success', 'Your order is confirmed!');
+      Alert.alert('Parabens', 'Voce nao e caloteiro!');
     }
   };
 
@@ -89,7 +89,7 @@ export default function PaymentScreen({ route }) {
       />
       <Button
         disabled={!loading}
-        title="Checkout"
+        title="Pagar"
         onPress={openPaymentSheet}
       />
     </View>

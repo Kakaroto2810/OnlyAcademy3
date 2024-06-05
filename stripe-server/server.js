@@ -9,25 +9,32 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.post('/payment-sheet', async (req, res) => {
-  const customer = await stripe.customers.create();
-  const ephemeralKey = await stripe.ephemeralKeys.create(
-    {customer: customer.id},
-    {apiVersion: '2024-04-10'}
-  );
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: 5000,
-    currency: 'brl',
-    customer: customer.id,
-    automatic_payment_methods: {
-      enabled: true,
-    },
-  });
+  const { amount } = req.body; // Recebe o valor do corpo da solicitação
 
-  res.json({
-    paymentIntent: paymentIntent.client_secret,
-    ephemeralKey: ephemeralKey.secret,
-    customer: customer.id,
-  });
+  try {
+    const customer = await stripe.customers.create();
+    const ephemeralKey = await stripe.ephemeralKeys.create(
+      {customer: customer.id},
+      {apiVersion: '2024-04-10'}
+    );
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount, // Utiliza o valor recebido
+      currency: 'brl',
+      customer: customer.id,
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+
+    res.json({
+      paymentIntent: paymentIntent.client_secret,
+      ephemeralKey: ephemeralKey.secret,
+      customer: customer.id,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

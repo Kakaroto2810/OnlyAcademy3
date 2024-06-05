@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Button, TextInput } from 'react-native';
+import { View, Alert, Button, TextInput, Text, StyleSheet } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 
-export default function PaymentScreen() {
+export default function PaymentScreen({ route }) {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
+
+  const { plan, price } = route.params; // Recebe o plano e o preço dos parâmetros de navegação
 
   const fetchPaymentSheetParams = async () => {
     const response = await fetch('http://192.168.100.55:3000/payment-sheet', {
@@ -15,6 +17,7 @@ export default function PaymentScreen() {
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ amount: price }) // Passando o valor correto para o backend
     });
     const { paymentIntent, ephemeralKey, customer } = await response.json();
 
@@ -62,27 +65,61 @@ export default function PaymentScreen() {
   }, []);
 
   return (
-    <>
+    <View style={styles.container}>
+      <Text style={styles.title}>Pagamento</Text>
+      <Text style={styles.planInfo}>Plano: {plan}</Text>
+      <Text style={styles.planInfo}>Preço: R$ {price / 100}</Text>
       <TextInput
         placeholder="Nome"
         value={name}
         onChangeText={setName}
+        style={styles.input}
       />
       <TextInput
         placeholder="Número de Telefone"
         value={phone}
         onChangeText={setPhone}
+        style={styles.input}
       />
       <TextInput
         placeholder="E-mail"
         value={email}
         onChangeText={setEmail}
+        style={styles.input}
       />
       <Button
         disabled={!loading}
         title="Checkout"
         onPress={openPaymentSheet}
       />
-    </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#f2f2f2',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  planInfo: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  input: {
+    width: '100%',
+    padding: 10,
+    marginVertical: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    borderColor: '#ddd',
+    borderWidth: 1,
+  },
+});

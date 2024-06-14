@@ -1,44 +1,64 @@
-// FeedScreen.js
 import React from 'react';
-import { View, FlatList, Image, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const posts = [
+const DATA = [
   {
     id: '1',
-    user: 'JohnDoe',
-    image: 'https://via.placeholder.com/400x300',
-    likes: 120,
-    description: 'Loving the sunset!',
+    user: 'Claire Dangais',
+    username: '@ClaireD15',
+    image: 'https://via.placeholder.com/400x200.png?text=Sunset',
+    likes: 122,
+    comments: 10,
   },
   {
     id: '2',
-    user: 'JaneDoe',
-    image: 'https://via.placeholder.com/400x300',
-    likes: 80,
-    description: 'Great day at the beach!',
+    user: 'Farita Smith',
+    username: '@SmithFa',
+    image: 'https://via.placeholder.com/400x200.png?text=Art',
+    likes: 150,
+    comments: 20,
   },
-  // Adicione mais postagens conforme necessário
 ];
+
+const FeedItem = ({ item }) => (
+  <View style={styles.card}>
+    <View style={styles.cardHeader}>
+      <Text style={styles.userName}>{item.user}</Text>
+      <Text style={styles.userHandle}>{item.username}</Text>
+    </View>
+    <Image source={{ uri: item.image }} style={styles.cardImage} />
+    <View style={styles.cardFooter}>
+      <Text>{item.comments} <Ionicons name="chatbubble-outline" size={16} /></Text>
+      <Text>{item.likes} <Ionicons name="heart-outline" size={16} /></Text>
+      <TouchableOpacity>
+        <Ionicons name="share-social-outline" size={16} />
+      </TouchableOpacity>
+    </View>
+  </View>
+);
 
 const FeedScreen = () => {
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <FlatList
-        data={posts}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.postContainer}>
-            <View style={styles.postHeader}>
-              <Text style={styles.username}>{item.user}</Text>
-            </View>
-            <Image source={{ uri: item.image }} style={styles.postImage} />
-            <View style={styles.postFooter}>
-              <Text style={styles.likes}>{item.likes} likes</Text>
-              <Text style={styles.description}>{item.description}</Text>
+        data={DATA}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <FeedItem item={item} />}
+        ListHeaderComponent={() => (
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Explore</Text>
+            <View style={styles.stories}>
+              <View style={styles.story}><Text>You</Text></View>
+              <View style={styles.story}><Text>Benjamin</Text></View>
+              <View style={styles.story}><Text>Farita</Text></View>
+              <View style={styles.story}><Text>Marie</Text></View>
             </View>
           </View>
         )}
       />
+   
     </View>
   );
 };
@@ -46,31 +66,74 @@ const FeedScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8f8f8',
+  },
+  header: {
+    padding: 16,
     backgroundColor: '#fff',
   },
-  postContainer: {
-    marginBottom: 20,
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
-  postHeader: {
+  stories: {
     flexDirection: 'row',
+    marginTop: 16,
+  },
+  story: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ddd',
     alignItems: 'center',
-    padding: 10,
+    justifyContent: 'center',
+    marginRight: 16,
   },
-  username: {
+  card: {
+    backgroundColor: '#fff',
+    margin: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  userName: {
+    fontSize: 16,
     fontWeight: 'bold',
   },
-  postImage: {
+  userHandle: {
+    fontSize: 14,
+    color: '#888',
+  },
+  cardImage: {
     width: '100%',
-    height: 400,
+    height: 200,
   },
-  postFooter: {
-    padding: 10,
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
   },
-  likes: {
-    fontWeight: 'bold',
+  navbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
   },
-  description: {
-    marginTop: 5,
+  addButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#ff6b6b',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: -28,
+    zIndex: 10,
   },
 });
 

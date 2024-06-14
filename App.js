@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -13,8 +13,7 @@ const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const HomeStack = () => (
-  <Stack.Navigator initialRouteName>
-    <Stack.Screen name="Home" component={HomeScreen} />
+  <Stack.Navigator>
     <Stack.Screen name="Wallet" component={WalletScreen} />
     <Stack.Screen name="Payment" component={PaymentScreen} />
   </Stack.Navigator>
@@ -25,8 +24,8 @@ export default function App() {
     <NavigationContainer>
       <Tab.Navigator>
         <Tab.Screen
-          name="lUCAS"
-          component={HomeStack}
+          name="Home"
+          component={HomeScreen}
           options={{
             tabBarIcon: ({ color, size }) => (
               <Icon name="home" color={color} size={size} />

@@ -3,9 +3,16 @@
     "name": "nome-do-seu-app",
     "slug": "slug-do-seu-app",
     "version": "1.0.0",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "sdkVersion": "44.0.0",
-    "permissions": ["CAMERA", "CAMERA_ROLL", "AUDIO_RECORDING"],
+    "permissions": [
+      "CAMERA",
+      "CAMERA_ROLL",
+      "AUDIO_RECORDING"
+    ],
     "plugins": [
       [
         "expo-camera",
@@ -36,6 +43,23 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"]
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "dependencies": {
+    "@react-navigation/bottom-tabs": "^6.5.20",
+    "@react-navigation/native": "^6.1.17",
+    "@react-navigation/native-stack": "^6.9.26",
+    "@react-navigation/stack": "^6.3.29",
+    "@stripe/stripe-react-native": "^0.38.0",
+    "expo": "^51.0.0",
+    "metro-core": "^0.80.9",
+    "react": "18.2.0",
+    "react-native": "0.74.2",
+    "react-native-gesture-handler": "^2.16.2",
+    "react-native-reanimated": "^3.12.0",
+    "react-native-safe-area-context": "^4.10.4",
+    "react-native-screens": "^3.31.1"
   }
 }

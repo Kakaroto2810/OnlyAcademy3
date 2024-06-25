@@ -34,8 +34,7 @@ const HomeScreen = ({ navigation }) => {
             </View>
             <Text style={styles.title}>@Catherine12</Text>
             <Text style={styles.subtitle}>
-              My name is Catherine. I like dancing in the rain and travelling all
-              around the world.
+              My name is Catherine. I like dancing in the rain and travelling all around the world.
             </Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.followButton}>
@@ -77,6 +76,20 @@ const HomeScreen = ({ navigation }) => {
               }}
             />
           </View>
+          <View style={styles.topContainer}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Wallet')}>
+              <Icon name="wallet" size={30} color="#000" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cameraButton} onPress={handleOpenCamera}>
+              <Icon name="camera" size={30} color="#000" />
+            </TouchableOpacity>
+          </View>
+          <Image
+            style={styles.profileImage}
+            source={{
+              uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIZzfthlaKemTEHg8k8nm0tw2xBK6bZdpIqxIXhs256YElYmK5lA9TF0VQq32UpHW93zQ&usqp=CAU',
+            }}
+          />
         </>
       )}
     </View>
@@ -96,6 +109,35 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
   },
+  topContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+  },
+  button: {
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    padding: 10,
+    bottom: -20,
+  },
+  cameraButton: {
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    padding: 10,
+    bottom: -20,
+    marginLeft: 10,
+  },
+  profileImage: {
+    height: 100,
+    width: 100,
+    borderRadius: 50,
+    position: 'absolute',
+    top: '15%',
+  },
   middleContainer: {
     position: 'absolute',
     borderTopLeftRadius: 80,
@@ -103,7 +145,7 @@ const styles = StyleSheet.create({
     bottom: '-10%',
     height: '90%',
     width: '100%',
-    backgroundColor: '#E6EEFA',
+    backgroundColor: '#EEEFA',
     padding: 10,
   },
   followContainer: {

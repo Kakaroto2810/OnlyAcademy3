@@ -11,6 +11,7 @@ import PaymentScreen from './PaymentScreen';
 import FeedScreen from './FeedScreen';
 import LoginScreen from './LoginScreen';
 import RegisterScreen from './RegisterScreen';
+import ProfileScreen from './ProfileScreen'; // Adicionando a importação da tela de perfil
 import supabase from './supabaseClient';
 
 const Stack = createStackNavigator();
@@ -64,6 +65,15 @@ export default function App() {
             options={{
               tabBarIcon: ({ color, size }) => (
                 <Icon name="list" color={color} size={size} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="person" color={color} size={size} />
               ),
             }}
           />

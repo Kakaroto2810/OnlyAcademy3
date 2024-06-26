@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import supabase from './supabaseClient';
 
 export default function RegisterScreen({ navigation }) {
@@ -8,19 +8,10 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({ email, password });
       if (error) {
-        console.log('Error during registration:', error);
-        if (error.message.includes("Email rate limit exceeded")) {
-          Alert.alert(
-            "Registration Error",
-            "You have exceeded the rate limit for email registrations. Please wait a few minutes and try again."
-          );
-        } else {
-          throw error;
-        }
+        throw error;
       } else {
-        console.log('Registration successful:', data);
         navigation.replace('HomeStack');
       }
     } catch (error) {

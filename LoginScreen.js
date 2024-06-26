@@ -1,24 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import supabase from './supabaseClient';
 
-export default function LoginScreen() {
-  const navigation = useNavigation();
+export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     try {
-      const { user, error } = await supabase.auth.signIn({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         throw error;
       } else {
-        console.log('Login successful:', user);
-        navigation.navigate('Home'); // Navegue para a tela 'Home' dentro do 'HomeStack'
+        navigation.replace('HomeStack');
       }
     } catch (error) {
-      Alert.alert('Login Error', error.message);
+      alert(error.message);
     }
   };
 

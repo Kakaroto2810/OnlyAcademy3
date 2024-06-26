@@ -1,50 +1,89 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, FlatList, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const DATA = [
-  {
-    id: '1',
-    user: 'Claire Dangais',
-    username: '@ClaireD15',
-    image: 'https://via.placeholder.com/400x200.png?text=Sunset',
-    likes: 122,
-    comments: 10,
-  },
-  {
-    id: '2',
-    user: 'Farita Smith',
-    username: '@SmithFa',
-    image: 'https://via.placeholder.com/400x200.png?text=Art',
-    likes: 150,
-    comments: 20,
-  },
-];
-
-const FeedItem = ({ item }) => (
-  <View style={styles.card}>
-    <View style={styles.cardHeader}>
-      <Text style={styles.userName}>{item.user}</Text>
-      <Text style={styles.userHandle}>{item.username}</Text>
-    </View>
-    <Image source={{ uri: item.image }} style={styles.cardImage} />
-    <View style={styles.cardFooter}>
-      <Text>{item.comments} <Ionicons name="chatbubble-outline" size={16} /></Text>
-      <Text>{item.likes} <Ionicons name="heart-outline" size={16} /></Text>
-      <TouchableOpacity>
-        <Ionicons name="share-social-outline" size={16} />
-      </TouchableOpacity>
-    </View>
-  </View>
-);
+import * as ImagePicker from 'expo-image-picker';
+import uuid from 'react-native-uuid'; // Importando a biblioteca
+import supabase from './supabaseClient';
 
 const FeedScreen = () => {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) console.error('Error fetching posts:', error);
+    else setPosts(data);
+  };
+
+  const handlePublish = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const { uri } = result.assets[0];
+      const fileName = `${uuid.v4()}.${uri.split('.').pop()}`; // Usando uuid para nome único
+      const fileType = uri.split('.').pop();
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('images') // Certifique-se de que o nome do bucket é "images"
+        .upload(fileName, {
+          uri,
+          name: fileName,
+          type: `image/${fileType}`,
+        });
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+      } else {
+        const imageUrl = supabase.storage.from('images').getPublicUrl(fileName).publicURL;
+
+        const { data: newPost, error: insertError } = await supabase
+          .from('posts')
+          .insert([
+            { user_id: supabase.auth.user().id, post_type: 'image', content: 'New post', image_url: imageUrl },
+          ]);
+
+        if (insertError) {
+          console.error('Error inserting post:', insertError);
+        } else {
+          fetchPosts(); // Refetch posts to include the new one
+        }
+      }
+    }
+  };
+
+  const FeedItem = ({ item }) => (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.userName}>{item.user_id}</Text>
+        <Text style={styles.userHandle}>@username</Text>
+      </View>
+      <Image source={{ uri: item.image_url }} style={styles.cardImage} />
+      <View style={styles.cardFooter}>
+        <Text>{item.likes} <Ionicons name="heart-outline" size={16} /></Text>
+        <TouchableOpacity>
+          <Ionicons name="share-social-outline" size={16} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <FlatList
-        data={DATA}
-        keyExtractor={(item) => item.id}
+        data={posts}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <FeedItem item={item} />}
         ListHeaderComponent={() => (
           <View style={styles.header}>
@@ -58,7 +97,9 @@ const FeedScreen = () => {
           </View>
         )}
       />
-   
+      <TouchableOpacity style={styles.publishButton} onPress={handlePublish}>
+        <Ionicons name="camera-outline" size={24} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -118,22 +159,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
   },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-  addButton: {
+  publishButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: '#ff6b6b',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: -28,
-    zIndex: 10,
   },
 });
 

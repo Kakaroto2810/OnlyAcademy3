@@ -1,97 +1,152 @@
-import React, { useState } from 'react';
-import { View, Image, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Image, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import * as ImagePicker from 'expo-image-picker';
+import supabase from './supabaseClient';
+import Avatar from './Avatar';
 
 const HomeScreen = ({ navigation }) => {
-  const [showCamera, setShowCamera] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [user, setUser] = useState(null);
 
-  const handleOpenCamera = () => {
-    setShowCamera(true);
+  useEffect(() => {
+    getUser();
+  }, []);
+
+  const getUser = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) {
+      return;
+    }
+    setUser(user);
   };
 
-  const handleCloseCamera = () => {
-    setShowCamera(false);
+  const handleOpenCamera = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfilePicture(result.assets[0].uri);
+      uploadProfilePicture(result.assets[0].uri);
+    }
   };
+
+  const uploadProfilePicture = async (imageUri) => {
+    try {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const fileExt = imageUri.split('.').pop();
+      const fileName = `profile_${Date.now()}.${fileExt}`;
+      
+      let { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, blob, {
+          contentType: 'image/jpeg',
+        });
+  
+      if (uploadError) {
+        throw new Error(uploadError.message);
+      }
+  
+      const { data: imageUrl, error: urlError } = await supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+  
+      if (urlError) {
+        throw new Error(urlError.message);
+      }
+  
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: imageUrl.publicUrl })
+        .eq('id', user.id);
+  
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+  
+      // Atualiza o estado local apenas após o sucesso em todas as etapas
+      setProfilePicture(imageUrl.publicUrl);
+      Alert.alert('Success', 'Profile picture updated successfully!');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+  
+  
 
   return (
     <View style={styles.container}>
-      {showCamera ? (
-        <CameraScreen navigation={navigation} handleCloseCamera={handleCloseCamera} />
-      ) : (
-        <>
-          <Image
-            style={styles.backgroundImage}
-            source={{
-              uri: 'https://wallpapers.com/images/high/pink-and-blue-pattern-marble-4k-mqufywb7yeli4fvm.webp',
-            }}
-          />
-          <View style={styles.middleContainer}>
-            <View style={styles.followContainer}>
-              <Text style={styles.followCount1k}>1k</Text>
-              <Text style={styles.followLabel}>Followers</Text>
-              <Text style={styles.followCount}>345</Text>
-              <Text style={styles.followLabel2}>Following</Text>
-            </View>
-            <Text style={styles.title}>@Catherine12</Text>
-            <Text style={styles.subtitle}>
-              My name is Catherine. I like dancing in the rain and travelling all around the world.
-            </Text>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.followButton}>
-                <Text style={styles.buttonText}>Follow</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.messageButton}>
-                <Text style={styles.buttonText}>Message</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.tabContainer}>
-              <TouchableOpacity style={styles.tabButton}>
-                <Text style={styles.tabText}>All</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.tabButton}>
-                <Text style={styles.tabText}>Photos</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.tabButton}>
-                <Text style={styles.tabText}>Videos</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.bottomContainer}>
-            <Image
-              style={styles.smallImage}
-              source={{
-                uri: 'https://img.freepik.com/fotos-premium/melhor-foto-aleatoria_865967-171027.jpg',
-              }}
-            />
-            <Image
-              style={styles.smallImage2}
-              source={{
-                uri: 'https://www.papeiseparede.com.br/7634-thickbox_default/papel-de-parede-paisagem-montanhas-geladas.jpg.webp',
-              }}
-            />
-            <Image
-              style={styles.smallImage3}
-              source={{
-                uri: 'https://www.queroviajarmais.com/wp-content/uploads/2020/08/lago-louise.jpg',
-              }}
-            />
-          </View>
-          <View style={styles.topContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Wallet')}>
-              <Icon name="wallet" size={30} color="#000" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cameraButton} onPress={handleOpenCamera}>
-              <Icon name="camera" size={30} color="#000" />
-            </TouchableOpacity>
-          </View>
-          <Image
-            style={styles.profileImage}
-            source={{
-              uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIZzfthlaKemTEHg8k8nm0tw2xBK6bZdpIqxIXhs256YElYmK5lA9TF0VQq32UpHW93zQ&usqp=CAU',
-            }}
-          />
-        </>
-      )}
+      <Image
+        style={styles.backgroundImage}
+        source={{ uri: 'https://wallpapers.com/images/high/pink-and-blue-pattern-marble-4k-mqufywb7yeli4fvm.webp' }}
+      />
+      <View style={styles.middleContainer}>
+        <Avatar
+          size={100}
+          url={profilePicture}
+          onUpload={(url) => setProfilePicture(url)}
+        />
+        <View style={styles.followContainer}>
+          <Text style={styles.followCount1k}>1k</Text>
+          <Text style={styles.followLabel}>Followers</Text>
+          <Text style={styles.followCount}>345</Text>
+          <Text style={styles.followLabel2}>Following</Text>
+        </View>
+        <Text style={styles.name}>@Catherine12</Text>
+        <Text style={styles.bio}>
+          My name is Catherine. I like dancing in the rain and travelling all around the world.
+        </Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.followButton}>
+            <Text style={styles.buttonText}>Follow</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.messageButton}>
+            <Text style={styles.buttonText}>Message</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity style={styles.tabButton}>
+            <Text style={styles.tabText}>All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tabButton}>
+            <Text style={styles.tabText}>Photos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tabButton}>
+            <Text style={styles.tabText}>Videos</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.bottomContainer}>
+        <Image
+          style={styles.smallImage}
+          source={{ uri: 'https://img.freepik.com/fotos-premium/melhor-foto-aleatoria_865967-171027.jpg' }}
+        />
+        <Image
+          style={styles.smallImage2}
+          source={{ uri: 'https://www.papeiseparede.com.br/7634-thickbox_default/papel-de-parede-paisagem-montanhas-geladas.jpg.webp' }}
+        />
+        <Image
+          style={styles.smallImage3}
+          source={{ uri: 'https://www.queroviajarmais.com/wp-content/uploads/2020/08/lago-louise.jpg' }}
+        />
+      </View>
+      <View style={styles.topContainer}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Wallet')}>
+          <Icon name="wallet" size={30} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.cameraButton} onPress={handleOpenCamera}>
+          <Icon name="camera" size={30} color="#000" />
+        </TouchableOpacity>
+      </View>
+      <Image
+        style={styles.foto_perfil}
+        source={{ uri: profilePicture || 'https://-tbn0.gstatic.com/images?q=tbn:ANd9GcRIZzfthlaKemTEHg8k8nm0tw2xBK6bZdpIqxIXhs256YElYmK5lA9TF0VQq32UpHW93zQ&usqp=CAU' }}
+      />
     </View>
   );
 };
@@ -131,7 +186,7 @@ const styles = StyleSheet.create({
     bottom: -20,
     marginLeft: 10,
   },
-  profileImage: {
+  foto_perfil: {
     height: 100,
     width: 100,
     borderRadius: 50,
@@ -146,117 +201,108 @@ const styles = StyleSheet.create({
     height: '90%',
     width: '100%',
     backgroundColor: '#EEEFA',
-    padding: 10,
+    alignItems: 'center',
   },
-  followContainer: {
-    flexDirection: 'row',
-  },
-  followCount: {
+  name: {
     fontSize: 24,
     fontWeight: 'bold',
-    left: 210,
+    marginTop: 10,
+    color: 'black',
   },
-  followCount1k: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    left: 60,
-  },
-  followLabel: {
-    fontSize: 16,
-    color: '#666',
-    bottom: -35,
-    left: 13,
-  },
-  followLabel2: {
-    fontSize: 16,
-    color: '#666',
-    bottom: -35,
-    left: 163,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  bio: {
+    fontSize: 14,
     textAlign: 'center',
-    bottom: -30,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    bottom: -40,
+    marginHorizontal: 20,
+    marginVertical: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 40,
-    bottom: -35,
+    width: '80%',
   },
   followButton: {
-    backgroundColor: '#00f',
+    backgroundColor: 'black',
     borderRadius: 20,
     padding: 10,
-    flex: 1,
-    alignItems: 'center',
     marginRight: 10,
+    alignItems: 'center',
+    width: '50%',
   },
   messageButton: {
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     borderRadius: 20,
     padding: 10,
-    flex: 1,
+    borderColor: 'black',
+    borderWidth: 1,
     alignItems: 'center',
-    marginLeft: 10,
+    width: '50%',
   },
   buttonText: {
-    color: '#000',
-    fontWeight: 'bold',
+    color: 'black',
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
-    bottom: -45,
+    width: '80%',
+    marginVertical: 10,
   },
   tabButton: {
-    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 10,
+    borderColor: 'black',
+    borderWidth: 1,
     alignItems: 'center',
+    width: '30%',
   },
   tabText: {
-    color: '#000',
-    fontWeight: 'bold',
+    color: 'black',
   },
-  bottomContainer: {
-    flex: 1,
-    borderTopLeftRadius: 80,
-    borderTopRightRadius: 80,
-    bottom: '-110%',
-    height: '5%',
-    width: '100%',
-    backgroundColor: 'white',
+  followContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     alignItems: 'center',
+  },
+  followCount1k: {
+    fontWeight: 'bold',
+    marginHorizontal: 30,
     padding: 10,
   },
+  followLabel: {
+    fontWeight: 'bold',
+    marginRight: 50,
+    padding: 10,
+  },
+  followCount: {
+    fontWeight: 'bold',
+    marginHorizontal: 30,
+    padding: 10,
+  },
+  followLabel2: {
+    fontWeight: 'bold',
+    marginRight: 30,
+    padding: 10,
+  },
+  bottomContainer: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
   smallImage: {
-    width: 170,
-    borderTopLeftRadius: 60,
-    height: 300,
-    top: -210,
-    left: 30,
+    height: 100,
+    width: 100,
+    borderRadius: 10,
   },
   smallImage2: {
-    borderTopRightRadius: 60,
-    width: 160,
-    height: 150,
-    top: -288,
-    left: 95,
+    height: 100,
+    width: 100,
+    borderRadius: 10,
   },
   smallImage3: {
-    width: 160,
-    height: 140,
-    right: 27,
-    top: -130,
+    height: 100,
+    width: 100,
+    borderRadius: 10,
   },
 });
 
